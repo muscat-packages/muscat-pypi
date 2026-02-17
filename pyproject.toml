@@ -1,0 +1,111 @@
+[build-system]
+requires = [
+  "scikit-build-core",
+  "numpy",
+  "cython",
+  "eigency>=3.4.0.4",
+  "sympy",
+  "pywin32 ; platform_system == 'Windows'",
+  "mkl-devel ; platform_system == 'Linux'",   # Needed by mumps
+
+  ]
+
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "Muscat"
+#TODO
+version = "2.5.4"
+#dynamic = ["version"]
+description = "A Python library for MUSCAT (Multi-Scale Computational Analysis Tool)"
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "sympy",
+    "networkx",
+    "eigency>=3.4.0.4",    # For interfacing with Eigen C++ library
+    "pycgns ; platform_system == 'Linux'",
+    "pywin32 ; platform_system == 'Windows'",
+    "dill",       # For advanced serialization
+#    "vtk",        # Optional, for 3D visualization
+#    "Plotly",     # Optional, for interactive plots
+#    "pyvista",    # For 3D visualization
+    "meshio",     # For mesh handling
+    "cvxpy",      # For AnisotropicMetricComputation
+    "mkl ; platform_system == 'Linux'",   # Needed by mumps
+]
+
+[project.optional-dependencies]
+gui = ["vtk", "pyvista", "Plotly"]
+storage = ["h5py","pycgns"]
+
+all = [
+  "muscat[gui]",
+  "muscat[storage]"
+]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if __name__ == .__main__.:",
+
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+    ]
+
+ignore_errors = true
+
+omit = [
+    "shibokensupport/*",
+    "pyscript",
+    "signature_bootstrap.py",
+]
+precision = 2
+
+[tool.coverage.html]
+directory = "html"
+title = "Coverage Report for Muscat"
+
+#[project.urls]
+#Homepage = "https://gitlab.com/drti/muscat"
+#Documentation = "https://gitlab.com/drti/muscat/-/wikis/home"
+#Source = "https://gitlab.com/drti/muscat"
+#Tracker = "https://gitlab.com/drti/muscat/-/issues"
+
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["src/Muscat/Info.py"]
+#build-jobs = 1
+
+# Specify the minimum CMake version required
+#cmake.version = "3.28"
+cmake.build-type = "Release"
+build.verbose = true
+cmake.source-dir = "."
+wheel.exclude = ["**.pyx"]
+build-dir = "../cmakebuild/wheel/{wheel_tag}"  # to be clean
+
+# The versions of Ninja to allow.
+ninja.version = ">=1.5"
+# Use Make as a fallback if a suitable Ninja executable is not found.
+ninja.make-fallback = true
+# The build targets to use when building the project.
+build.targets = ["muscat"]
+
+[tool.scikit-build.cmake.define]
+#FIND_NETCDF_PATH = "/build_scripts"
+#BIN_DIR = "/home/me/Anaconda/envs/skbuild_test/bin"
