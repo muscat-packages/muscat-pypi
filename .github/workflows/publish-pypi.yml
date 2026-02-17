@@ -1,0 +1,114 @@
+name: Build and Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build cibuildwheel==2.*
+
+      - name: Build sdist and wheels (Linux)
+        run: |
+          python -m build --sdist --outdir wheelhouse
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheelhouse-linux
+          path: wheelhouse
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade cibuildwheel==2.*
+
+      - name: Build wheels (macOS)
+        run: |
+          python3 -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheelhouse-macos
+          path: wheelhouse
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade cibuildwheel==2.*
+
+      - name: Build wheels (Windows)
+        shell: bash
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheelhouse-windows
+          path: wheelhouse
+
+  publish:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-linux
+          path: artifacts
+
+      - name: Download macOS wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-macos
+          path: artifacts
+
+      - name: Download Windows wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-windows
+          path: artifacts
+
+      - name: Install twine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade twine
+
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          ls -la artifacts || true
+          python -m pip install --upgrade twine
+          python -m twine upload artifacts/**/wheelhouse/* artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive
