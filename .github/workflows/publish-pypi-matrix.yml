@@ -7,6 +7,7 @@ on:
   workflow_dispatch: {}
   repository_dispatch:
     types: [gitlab-tag]
+  #pull_request:
 
 permissions:
   contents: read
@@ -19,37 +20,47 @@ jobs:
         os : ["ubuntu-latest"]
         #,"macos-latest","windows-latest"]
         #version: ["3.10", "3.11","3.12", "3.13", "3.14"]
-        version: ["3.12"]
-        include:
-          - runs-on: ubuntu-latest
-            artifact-name: wheelhouse-linux
+      #  version: ["3.12"]
+      #  include:
+      #    - runs-on: ubuntu-latest
+      #      artifact-name: wheelhouse-linux
       #    - runs-on: macos-latest
       #      artifact-name: wheelhouse-macos
       #    - runs-on: windows-latest
       #      artifact-name: wheelhouse-windows
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.version }}
+      #- name: Set up Python
+      #  uses: actions/setup-python@v4
+      #  with:
+      #    python-version: ${{ matrix.version }}
 
-      - name: Install build tools
-        run: |
-          ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m pip install --upgrade pip
-          ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m pip install --upgrade cibuildwheel==2.*
+      #- name: Install build tools
+      #  run: |
+      #    ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m pip install --upgrade pip
+      #    ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m pip install --upgrade cibuildwheel==2.*
+
+      #- name: Build wheels
+      #  run: |
+      #    ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels
-        run: |
-          ${{ matrix.os == 'macos-latest' && 'python3' || 'python' }} -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v3.3.1
+        # env:
+        #   CIBW_SOME_OPTION: value
+        #   ...
+        with:
+        #   package-dir: .
+          output-dir: wheelhouse
+        #   config-file: "{package}/pyproject.toml"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}_${{ matrix.version }}
-          path: wheelhouse
+          name: ${{ matrix.os }}_${{ matrix.version }}
+          path: ./wheelhouse/*.whl
 
   publish:
     needs: [build]
