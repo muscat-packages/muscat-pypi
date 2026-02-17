@@ -25,7 +25,7 @@ option(Muscat_ENABLE_cpp_tests "Compile pure C++ test" OFF)
 option(Muscat_ENABLE_OPENMP "Enable OpenMP support (nedded by kokkos when kokkos has openmp support)" ON)
 
 ## urls and md5
-set(Muscat_URL "/home/fbordeu/PythonLibs/Muscat" )
+set(Muscat_URL "https://gitlab.com/felipebordeu/muscat/-/archive/PipsPerso/muscat-PipsPerso.tar.gz" )
 
 set(boost_URL "https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-b2-nodocs.tar.gz" )
 set(boost_URL_HASH "SHA256=aa25e7b9c227c21abb8a681efd4fe6e54823815ffc12394c9339de998eb503fb" )
