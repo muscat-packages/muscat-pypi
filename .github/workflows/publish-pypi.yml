@@ -2,9 +2,15 @@ name: Build and Publish to PyPI
 
 on:
   push:
+    # Trigger on any tag push.
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch: {}
+  # Allow external systems (e.g. GitLab CI) to trigger this workflow via
+  # the repository_dispatch API. Use event type `gitlab-tag` and include
+  # a JSON payload with `tag` to specify the tag name.
+  repository_dispatch:
+    types: [gitlab-tag]
 
 jobs:
   build-linux:
@@ -77,9 +83,23 @@ jobs:
   publish:
     needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
     steps:
       - uses: actions/checkout@v4
+
+      - name: Determine tag to publish
+        id: determine_tag
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
+            TAG=$(jq -r .client_payload.tag < "$GITHUB_EVENT_PATH")
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "No tag found; aborting"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Download Linux wheels
         uses: actions/download-artifact@v4
