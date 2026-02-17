@@ -46,6 +46,11 @@ all = [
   "muscat[storage]"
 ]
 
+[tool.cibuildwheel]
+# Run the package tests using `pytest`
+test-command = "python -m Muscat.Helpers.Check"
+
+
 [tool.coverage.run]
 branch = true
 
