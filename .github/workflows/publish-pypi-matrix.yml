@@ -1,0 +1,146 @@
+name: Build and Publish to PyPI
+
+
+run-name: ${{ github.event.inputs.run-name }}${{ github.event.client_payload.run-name }} = ${{ github.event.inputs.tag_name }}${{github.event.client_payload.ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Muscat Tag/Branch name to use for building'
+        required: false
+        type: string
+        default: 'master'
+      PyPiDeploy:
+        description: 'Deploy to PyPi'
+        required: false
+        type: boolean
+        default: false
+      run-name:
+        description: 'Name to display in the workflow list'
+        required: false
+        type: string
+        default: 'Ran from GitHub GUI'
+  repository_dispatch:
+    types: [tag_push]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Only run if 'after' is NOT the zero-hash (which signifies a deletion)
+    if: github.event.client_payload.after != '0000000000000000000000000000000000000000' || github.event.inputs.tag_name != ''
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os : ["ubuntu-latest","windows-latest" ] #,"macos-latest"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # this comes form the webhook payload
+      - name: Set TAG_NAME environment variable
+        run: |
+          # Priority: workflow_dispatch input > client_payload.ref > GITHUB_REF
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          elif [ -n "${{ github.event.client_payload.ref }}" ]; then
+            FULL_REF="${{ github.event.client_payload.ref }}"
+            TAG_NAME="${FULL_REF#refs/tags/}"
+            TAG_NAME="${TAG_NAME#refs/heads/}"
+          elif [ -n "$GITHUB_REF" ]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            TAG_NAME="${TAG_NAME#refs/heads/}"
+          else
+            echo "No tag found; aborting"
+            exit 1
+          fi
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Ensure PACKAGE_VERSION is PEP 440 compliant
+        run: |
+          # If TAG_NAME is not PEP 440 compliant, prepend '0.1.0+'
+          # PEP 440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
+          # This is a simple check: must start with a digit and contain only allowed chars
+          PACKAGE_VERSION="$TAG_NAME"
+          if ! [[ "$PACKAGE_VERSION" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9\.\+\-_]*)$ ]]; then
+            PACKAGE_VERSION="0.1.0+$TAG_NAME"
+            echo "TAG_NAME was not PEP 440 compliant, changed to $PACKAGE_VERSION"
+          fi
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+        shell: bash
+
+
+      - name: Find and Replace in File (set the version in the pyproject.toml file)
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'pyproject.toml' # Glob pattern for files to search
+          search-text: 'dynamic = ["version"]' # The text to find
+          replacement-text: 'version = "${{ env.PACKAGE_VERSION }}"' # The text to replace it with
+
+      - name: Find and Replace in File (set the tag/branch to use in the pyproject.toml file)
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'pyproject.toml' # Glob pattern for files to search
+          search-text: 'MuscatTagBranch = "master"' # The text to find
+          replacement-text: 'MuscatTagBranch = "${{ env.TAG_NAME }}"' # The text to replace it with
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.3.1
+        env:
+          CIBW_BUILD : "cp310-* cp311-* cp312-* cp313-* cp314-*" # "* cp314t-*"
+          CIBW_ENVIRONMENT: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
+          CIBW_ENVIRONMENT_PASS_LINUX: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
+
+        with:
+        #   package-dir: .
+          output-dir: wheelhouse
+        #   config-file: "{package}/pyproject.toml"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheelhouse-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    #upload only if is really a tag and not a manual execution
+    if: (startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' ) && github.event.inputs.PyPiDeploy != false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-ubuntu-latest
+          path: artifacts
+
+      #- name: Download macOS wheels
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: wheelhouse-macos-latest
+      #    path: artifacts
+
+      - name: Download Windows wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-windows-latest
+          path: artifacts
+
+      - name: Install twine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade twine
+
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        #TODO remove the --repository testpypi to publish to the official pypi page
+        run: |
+          ls -la artifacts || true
+          python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive --verbose
