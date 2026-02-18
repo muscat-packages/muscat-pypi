@@ -36,8 +36,10 @@ jobs:
           elif [ -n "${{ github.event.client_payload.ref }}" ]; then
             FULL_REF="${{ github.event.client_payload.ref }}"
             TAG_NAME="${FULL_REF#refs/tags/}"
+            TAG_NAME="${TAG_NAME#refs/heads/}"
           elif [ -n "$GITHUB_REF" ]; then
             TAG_NAME="${GITHUB_REF#refs/tags/}"
+            TAG_NAME="${TAG_NAME#refs/heads/}"
           else
             echo "No tag found; aborting"
             exit 1
