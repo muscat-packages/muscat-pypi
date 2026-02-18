@@ -76,7 +76,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_BUILD : "cp310-*" # "cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-*"
+          CIBW_BUILD : "cp310-* cp311-*" # "cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-*"
           CIBW_ENVIRONMENT: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
           CIBW_ENVIRONMENT_PASS_LINUX: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
 
@@ -88,7 +88,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheelhouse_${{ matrix.os }}
+          name: wheelhouse-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   publish:
