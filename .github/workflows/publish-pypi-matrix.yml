@@ -149,4 +149,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           ls -la artifacts || true
-          python -m twine upload --repository testpypi artifacts/**/wheelhouse/* artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive
+          python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive
