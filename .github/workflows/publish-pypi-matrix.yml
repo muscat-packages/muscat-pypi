@@ -45,17 +45,17 @@ jobs:
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         shell: bash
 
-      - name: Ensure TAG_NAME is PEP 440 compliant
+      - name: Ensure PACKAGE_VERSION is PEP 440 compliant
         run: |
           # If TAG_NAME is not PEP 440 compliant, prepend '0.1.0+'
           # PEP 440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
           # This is a simple check: must start with a digit and contain only allowed chars
-          TAG_NAME="$TAG_NAME"
-          if ! [[ "$TAG_NAME" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9\.\+\-_]*)$ ]]; then
-            TAG_NAME="0.1.0+$TAG_NAME"
-            echo "TAG_NAME was not PEP 440 compliant, changed to $TAG_NAME"
+          PACKAGE_VERSION="$TAG_NAME"
+          if ! [[ "$PACKAGE_VERSION" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9\.\+\-_]*)$ ]]; then
+            PACKAGE_VERSION="0.1.0+$TAG_NAME"
+            echo "TAG_NAME was not PEP 440 compliant, changed to $PACKAGE_VERSION"
           fi
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
         shell: bash
 
 
@@ -64,7 +64,7 @@ jobs:
         with:
           files: 'pyproject.toml' # Glob pattern for files to search
           search-text: 'dynamic = ["version"]' # The text to find
-          replacement-text: 'version = "${{ env.TAG_NAME }}"' # The text to replace it with
+          replacement-text: 'version = "${{ env.PACKAGE_VERSION }}"' # The text to replace it with
 
       - name: Find and Replace in File (set the version in the pyproject.toml file)
         uses: richardrigutins/replace-in-files@v2

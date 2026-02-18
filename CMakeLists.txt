@@ -13,7 +13,7 @@ option(Muscat_ENABLE_Mmg    "Add the compilation to the mmg interface" ON)
 option(Muscat_ENABLE_Documentation "Add the target doc_html to build the documentation" OFF)
 option(Muscat_ENABLE_cpp_tests "Compile pure C++ tests" OFF)
 
-if(DEFINED MuscatTagBranch AND NOT "${MY_VAR}" STREQUAL "" )
+if(DEFINED MuscatTagBranch AND NOT "${MuscatTagBranch}" STREQUAL "" )
   set(MuscatTagBranchVersion ${MuscatTagBranch})
 else()
   set(MuscatTagBranchVersion "master")
