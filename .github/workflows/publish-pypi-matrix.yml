@@ -12,7 +12,7 @@ on:
         type: string
         default: 'master'
   repository_dispatch:
-    types: [gitlab-tag]
+    types: [tag_push]
 
 permissions:
   contents: read
