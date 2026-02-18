@@ -13,11 +13,13 @@ option(Muscat_ENABLE_Mmg    "Add the compilation to the mmg interface" ON)
 option(Muscat_ENABLE_Documentation "Add the target doc_html to build the documentation" OFF)
 option(Muscat_ENABLE_cpp_tests "Compile pure C++ tests" OFF)
 
-if(DEFINED $ENV{TAG_NAME})
-  set(MuscatTagBranchVersion $ENV{TAG_NAME})
+if(DEFINED ${MuscatTagBranch})
+  set(MuscatTagBranchVersion ${MuscatTagBranch})
 else()
   set(MuscatTagBranchVersion "masterA")
 endif()
+message(STATUS "MuscatTagBranch is defined to: ${MuscatTagBranch}")
+message(STATUS "ENV MuscatTagBranch is defined to: $ENV{MuscatTagBranch}")
 
 message(STATUS "MuscatTagBranchVersion is defined to: ${MuscatTagBranchVersion}")
 
