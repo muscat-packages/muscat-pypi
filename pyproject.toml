@@ -40,7 +40,7 @@ gui = [
 
 storage = [
     "h5py",
-    "pycgns ; platform_system == 'Linux'",
+#    "pycgns ; platform_system == 'Linux'",
     "meshio",     # For mesh handling
     ]
 
