@@ -1,22 +1,42 @@
-# MuscatSuperbuild - A repository to generate the PyPi packages for Muscat
+Muscat-PyPi - A repository to generate the PyPi packages for Muscat (https://gitlab.com/drti/muscat)
+===========================================================================================================
 
-A Python library for multi-scale computational analysis featuring advanced mesh handling, visualization, and numerical solvers.
+Muscat-PyPi for Muscat to generate wheels on Github
 
-## Requirements
+This Muscat Super Build will build all the dependencies to available in Pypi.
 
-### System Requirements
-- Python 3.x with development headers
-- CMake 3.28+
-- Ninja or Make build system
-- Compiler: GCC, Clang, or MSVC
+Publishing to PyPI
+==================
 
-### Platform-Specific
-- **Windows**: Visual Studio build tools
-- **Linux**: MKL development files for MUMPS support
+This repository includes a GitHub Actions workflow to build binary wheels on Linux, macOS and Windows and publish them to PyPI when a tag is pushed to the Muscat repository.
 
-## Installation
+Setup
+-----
 
-Install from PyPI:
+On this Repository (GitHub):
 
-pip install muscat
+Create a Github Personal Access Token with the permissions : actions:write
+Url for the creation : https://github.com/settings/personal-access-tokens/new
 
+- Create a secret named `PYPI_API_TOKEN` in the repository settings (Settings → Secrets → Actions) containing a PyPI API token with `action` permissions.
+
+
+On Muscat Repository ("https://gitlab.com/drti/muscat")
+
+Create a Gitlab Webhook to notified github of the event push tag
+
+https://gitlab.com/drti/muscat/-/hooks
+
+current active hook
+https://gitlab.com/drti/muscat/-/hooks/71549345/edit
+
+What the workflow does
+----------------------
+
+- `build-linux`, `build-macos`, `build-windows` build wheels using `cibuildwheel` on each OS and upload per-job artifacts.
+- `publish` downloads artifacts and uploads them to PyPI using `twine` and the `PYPI_API_TOKEN` secret.
+
+Notes
+-----
+
+- For CI troubleshooting, run the workflow via `Actions` → select the workflow → `Run workflow` or inspect logs on failed runs.

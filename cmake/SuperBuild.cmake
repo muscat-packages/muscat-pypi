@@ -29,8 +29,7 @@ ExternalProject_Add(
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DMuscat_ENABLE_Mmg=${Muscat_ENABLE_Mmg}
     -Dmmg_ROOT=${CMAKE_BINARY_DIR}/install-temp/
-    -DMuscat_ENABLE_Mumps=${Muscat_ENABLE_Mumps}
-    -DMumps_ROOT=${CMAKE_BINARY_DIR}/install-temp/
+    -DMuscat_ENABLE_Mumps=OFF
     -DBoost_ROOT=${CMAKE_BINARY_DIR}/install-temp/lib/cmake/Boost-1.89.0/
     -DKokkos_ROOT=${CMAKE_BINARY_DIR}/install-temp/
     -DMuscat_ENABLE_Documentation=${Muscat_ENABLE_Documentation}
@@ -107,6 +106,7 @@ else()
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install-temp/
         -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+        -DCMAKE_INSTALL_LIBDIR=lib
 
     )
     add_dependencies(muscat Kokkos)
@@ -152,45 +152,14 @@ if(Muscat_ENABLE_Mmg)
             -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install-temp
             -DCMAKE_INSTALL_RPATH=$ORIGIN/:$ORIGIN/../:$ORIGIN/../lib
+            -DCMAKE_INSTALL_LIBDIR=lib
             BUILD_COMMAND cmake --build . --config Release
             INSTALL_COMMAND cmake --install .
         )
         add_dependencies(muscat mmg)
     endif()
 endif()
-#----------------------------- Mumps --------------------------------------
-if(Muscat_ENABLE_Mumps)
-    set(Mumps_ROOT ${CMAKE_BINARY_DIR}/install-temp)
-    find_package(Mumps CONFIG)
-    if(Mumps_FOUND)
-        message(STATUS "Muscat SuperBuild: Mumps found no need to download it")
-    else()
-        message(STATUS "Muscat SuperBuild: Mumps not found, downloading and compiling it")
-        ExternalProject_Add(
-            mumps
-            URL https://github.com/scivision/mumps-superbuild/archive/refs/tags/v5.8.1.0.zip
-            URL_MD5 c90f387bc26ead9f7a53e67f03c2292b
-        #        BUILD_ALWAYS TRUE
-            CMAKE_ARGS
-            -GNinja
-            --install-prefix ${CMAKE_BINARY_DIR}/install-temp
-            -DCMAKE_BUILD_TYPE=Release
-            -DMUMPS_parallel=no
-            -DBUILD_SHARED_LIBS=ON
-            -DBUILD_SINGLE=on
-            -DBUILD_DOUBLE=on
-            -DBUILD_COMPLEX=on
-            -DBUILD_COMPLEX16=on
-            -DLAPACK_VENDOR=MKL
-            -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/install-temp
-            -DCMAKE_INSTALL_RPATH=$ORIGIN/:$ORIGIN/../
-            #:$ORIGIN/../lib:/home/fbordeu/tmp/CompilAndInstall/venv312/lib/
-            INSTALL_COMMAND cmake --install .
-        )
-        add_dependencies(muscat mumps)
-    endif()
-endif()
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------
 
 # if in a skbuild context need some hacking to produce a functional package
 
@@ -229,23 +198,6 @@ if(${SKBUILD} EQUAL 2)
                 libmmgs.so.5.8.0
             )
         endif()
-        if(Muscat_ENABLE_Mumps)
-            list(APPEND extra_libs_to_copy
-                libcmumps.so
-                libcmumps.so.5.8.1.0
-                libdmumps.so
-                libdmumps.so.5.8.1.0
-                libsmumps.so
-                libsmumps.so.5.8.1.0
-                libzmumps.so
-                libzmumps.so.5.8.1.0
-                libmumps_common.so
-                libmumps_common.so.5.8.1.0
-                libmpiseq_fortran.so
-                libmpiseq_c.so
-                libpord.so
-                )
-        endif()
     elseif(APPLE)
         set(lib_path lib)
         set(extra_libs_to_copy
@@ -259,18 +211,6 @@ if(${SKBUILD} EQUAL 2)
             libmmg2d.5.dylib
             libmmg3d.5.dylib
             libmmgs.5.dylib)
-        endif()
-        if(Muscat_ENABLE_Mumps)
-            list(APPEND extra_libs_to_copy
-                libcmumps.dylib
-                libdmumps.dylib
-                libsmumps.dylib
-                libzmumps.dylib
-                libmumps_common.dylib
-                libmpiseq_fortran.dylib
-                libmpiseq_c.dylib
-                libpord.dylib
-                )
         endif()
     elseif(WIN32)
         set(lib_path bin)
@@ -315,27 +255,35 @@ if(${SKBUILD} EQUAL 2)
                         ${SKBUILD_SCRIPTS_DIR}/)
         endforeach()
 
-        if(Muscat_ENABLE_Mumps)
-            set(extra_libs_to_copy
-                cmumps.dll
-                dmumps.dll
-                smumps.dll
-                zmumps.dll
-                mumps_common.dll
-                mpiseq_fortran.dll
-                mpiseq_c.dll
-                pord.dll
-                )
-        endif()
     endif()
+    #TODO need to clean all this part
+
 
     foreach(lib ${extra_libs_to_copy})
+        install(FILES ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} DESTINATION ${CMAKE_INSTALL_PREFIX_internal}/lib)
+
+
         add_custom_command(
             TARGET muscat
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                     ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
                     ${SKBUILD_DATA_DIR}/)
+
+        add_custom_command(
+            TARGET muscat
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+                    ${SKBUILD_PROJECT_NAME}/lib)
+
+        add_custom_command(
+            TARGET muscat
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+                    /usr/local/lib/)
+
     endforeach()
 
     # we need to copy the mmg executables to the scripts folder
