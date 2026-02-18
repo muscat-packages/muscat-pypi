@@ -16,7 +16,7 @@ option(Muscat_ENABLE_cpp_tests "Compile pure C++ tests" OFF)
 if(DEFINED ${MuscatTagBranch})
   set(MuscatTagBranchVersion $ENV{MuscatTagBranch})
 else()
-  set(MuscatTagBranchVersion "MuscatPyPi")
+  set(MuscatTagBranchVersion "master")
 endif()
 
 message(STATUS "MuscatTagBranchVersion is defined to: ${MuscatTagBranchVersion}")

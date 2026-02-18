@@ -7,9 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name to use for publishing'
+        description: 'Muscat Tag/Branch name to use for building'
         required: false
         type: string
+        default: 'master'
   repository_dispatch:
     types: [gitlab-tag]
 
