@@ -94,9 +94,7 @@ else()
     ExternalProject_Add(
         Kokkos
         URL https://github.com/kokkos/kokkos/releases/download/4.7.00/kokkos-4.7.00.tar.gz
-        URL_MD5 24cd603e2a047fc8d67d814f33769f54
-        #DOWNLOAD_DIR "C:/Users/felip/temp/D/"
-        #SOURCE_DIR "C:/Users/felip/temp/S/kokkos/"
+        #URL_MD5 $Kokkos_URL_MD5
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_SHARED_LIBS=ON
@@ -123,7 +121,7 @@ else()
     ExternalProject_Add(
         Eigen3
         URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
-        URL_MD5 132dde48fe2b563211675626d29f1707
+        #URL_MD5 $Eigen3_URL_MD5
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install-temp
@@ -143,8 +141,7 @@ if(Muscat_ENABLE_Mmg)
         ExternalProject_Add(
             mmg
             URL https://github.com/MmgTools/mmg/archive/8ed2259164fa4c90be6301d247ecb1db7bd61228.zip
-            URL_MD5 5ae809d265229b8aeea630e8ba9e2ce2
-    #        BUILD_ALWAYS TRUE
+            URL_MD5 $Mmg_URL_MD5
             CMAKE_ARGS
             -GNinja
             -DCMAKE_BUILD_TYPE=Release

@@ -11,7 +11,7 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "Muscat"
+name = "muscat"
 
 # this string is replaced by the GitHub action to the actual tag or branch name used for the compilation
 #dynamic = ["version"]  -> version = "2.5.4"   (for example)
@@ -41,6 +41,7 @@ gui = [
 storage = [
     "h5py",
     "meshio",     # For mesh handling
+    "pycgns ; platform_system == 'Linux'",
     ]
 
 all = [
