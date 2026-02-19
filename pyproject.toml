@@ -40,7 +40,6 @@ gui = [
 
 storage = [
     "h5py",
-#    "pycgns ; platform_system == 'Linux'",
     "meshio",     # For mesh handling
     ]
 
@@ -50,7 +49,7 @@ all = [
 ]
 
 [tool.cibuildwheel]
-test-requires = ["h5py","pycgns","pyvista","meshio","plotly","cosapp"]
+test-requires = ["h5py","pyvista","meshio","plotly","cosapp"]
 test-command = "python -m Muscat.Helpers.Check"
 
 # This skip pattern ensures only manylinux wheels are built on Linux
