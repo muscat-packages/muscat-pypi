@@ -116,6 +116,5 @@ ninja.make-fallback = true
 build.targets = ["muscat"]
 
 [tool.scikit-build.cmake.define]
-#MuscatTagBranch = "MuscatPyPi" # this values will be changed by the github action
-MuscatTagBranch = "master" # this values will be changed by the github action #TODO
+MuscatTagBranch = "master" # this values will be changed by the github action
 

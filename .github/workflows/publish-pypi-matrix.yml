@@ -1,7 +1,7 @@
 name: Build and Publish to PyPI
 
 
-run-name: ${{ github.event.client_payload.run-name }}  (${{ github.event.inputs.tag_name }} , github.event.client_payload.ref)
+run-name: ${{ github.event.client_payload.run-name }}  (${{ github.event.inputs.tag_name }} , ${{github.event.client_payload.ref }})
 
 on:
   workflow_dispatch:
@@ -68,7 +68,7 @@ jobs:
           search-text: 'dynamic = ["version"]' # The text to find
           replacement-text: 'version = "${{ env.PACKAGE_VERSION }}"' # The text to replace it with
 
-      - name: Find and Replace in File (set the version in the pyproject.toml file)
+      - name: Find and Replace in File (set the tag/branch to use in the pyproject.toml file)
         uses: richardrigutins/replace-in-files@v2
         with:
           files: 'pyproject.toml' # Glob pattern for files to search
@@ -78,7 +78,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_BUILD : "cp310-* cp312-*" # "cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-*"
+          CIBW_BUILD : "cp310-* cp311-* cp312-*  cp313-*" # "cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-*"
           CIBW_ENVIRONMENT: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
           CIBW_ENVIRONMENT_PASS_LINUX: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
 
@@ -100,25 +100,6 @@ jobs:
     if: startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
     steps:
       - uses: actions/checkout@v4
-
-      # - name: Determine tag to publish
-      #   id: determine_tag
-      #   run: |
-      #     # Priority: workflow_dispatch input > client_payload.ref > client_payload.tag > GITHUB_REF
-      #     if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
-      #       TAG="${{ github.event.inputs.tag_name }}"
-      #     elif [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
-      #       # Try ref first (GitLab webhook), then tag
-      #       TAG=$(jq -r '.client_payload.ref // .client_payload.tag' < "$GITHUB_EVENT_PATH")
-      #       TAG="${TAG#refs/tags/}"
-      #     else
-      #       TAG="${GITHUB_REF#refs/tags/}"
-      #     fi
-      #     if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-      #       echo "No tag found; aborting"
-      #       exit 1
-      #     fi
-      #     echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Download Linux wheels
         uses: actions/download-artifact@v4
@@ -147,6 +128,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        #TODO remove the --repository testpypi to publish to the official pypi page
         run: |
           ls -la artifacts || true
-          python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive
+          python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive --verbose
