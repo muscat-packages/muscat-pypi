@@ -1,7 +1,7 @@
 name: Build and Publish to PyPI
 
 
-run-name: ${{ github.event.client_payload.run-name }}
+run-name: ${{ github.event.client_payload.run-name }}  (${{ github.event.inputs.tag_name }} , github.event.client_payload.ref)
 
 on:
   workflow_dispatch:
