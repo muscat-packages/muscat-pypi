@@ -141,7 +141,7 @@ if(Muscat_ENABLE_Mmg)
         ExternalProject_Add(
             mmg
             URL https://github.com/MmgTools/mmg/archive/8ed2259164fa4c90be6301d247ecb1db7bd61228.zip
-            URL_MD5 $Mmg_URL_MD5
+#            URL_MD5 $Mmg_URL_MD5
             CMAKE_ARGS
             -GNinja
             -DCMAKE_BUILD_TYPE=Release
