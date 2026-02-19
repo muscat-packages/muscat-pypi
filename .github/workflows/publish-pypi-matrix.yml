@@ -1,7 +1,7 @@
 name: Build and Publish to PyPI
 
 
-run-name: ${{ github.event.client_payload.run-name }}  (${{ github.event.inputs.tag_name }} , ${{github.event.client_payload.ref }})
+run-name: ${{ github.event.inputs.run-name }}${{ github.event.client_payload.run-name }} = ${{ github.event.inputs.tag_name }}${{github.event.client_payload.ref }})
 
 on:
   workflow_dispatch:
@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'master'
+      run-name:
+        description: 'Name to display in the workflow list'
+        required: false
+        type: string
+        default: 'Ran from GitHub GUI'
   repository_dispatch:
     types: [tag_push]
 
@@ -22,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os : ["ubuntu-latest"] #,"macos-latest","windows-latest"]
+        os : ["ubuntu-latest","macos-latest","windows-latest" ] #
 
     steps:
       - uses: actions/checkout@v5
@@ -107,17 +112,17 @@ jobs:
           name: wheelhouse-ubuntu-latest
           path: artifacts
 
-      #- name: Download macOS wheels
-      #  uses: actions/download-artifact@v4
-      #  with:
-      #    name: wheelhouse-macos-latest
-      #    path: artifacts
+      - name: Download macOS wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-macos-latest
+          path: artifacts
 
-      #- name: Download Windows wheels
-      #  uses: actions/download-artifact@v4
-      #  with:
-      #    name: wheelhouse-windows-latest
-      #    path: artifacts
+      - name: Download Windows wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheelhouse-windows-latest
+          path: artifacts
 
       - name: Install twine
         run: |
