@@ -1,7 +1,7 @@
 name: Build and Publish to PyPI
 
-# to execute on tag push event
 
+run-name: ${{ github.event.client_payload.run-name }}
 
 on:
   workflow_dispatch:
