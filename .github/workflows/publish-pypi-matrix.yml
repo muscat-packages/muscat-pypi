@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'master'
+      PyPiDeploy:
+        description: 'Deploy to PyPi'
+        required: false
+        type: boolean
+        default: false
       run-name:
         description: 'Name to display in the workflow list'
         required: false
@@ -25,7 +30,7 @@ permissions:
 jobs:
   build:
     # Only run if 'after' is NOT the zero-hash (which signifies a deletion)
-    if: github.event.client_payload.after != '0000000000000000000000000000000000000000' || github.event.client_payload.ref != ''
+    if: github.event.client_payload.after != '0000000000000000000000000000000000000000' || github.event.inputs.tag_name != ''
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -102,6 +107,7 @@ jobs:
 
   publish:
     needs: [build]
+    if:  github.event.inputs.PyPiDeploy != false
     runs-on: ubuntu-latest
     #upload only if is really a tag and not a manual execution
     if: startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
