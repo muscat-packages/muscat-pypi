@@ -34,11 +34,12 @@ ExternalProject_Add(
     -DKokkos_ROOT=${CMAKE_BINARY_DIR}/install-temp/
     -DMuscat_ENABLE_Documentation=${Muscat_ENABLE_Documentation}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX_internal}
-    -DSKBUILD=${SKBUILD}
+    -DSKBUILD_PROJECT_NAME=${SKBUILD_PROJECT_NAME}
     -DSKBUILD_PLATLIB_DIR=${SKBUILD_PLATLIB_DIR}
     -DSKBUILD_DATA_DIR=${SKBUILD_DATA_DIR}
     -DMuscat_ENABLE_Python=${Muscat_ENABLE_Python}
     -DMuscat_ENABLE_CUDA=${Muscat_ENABLE_CUDA}
+    -DPython_ROOT_DIR=${Python_ROOT_DIR}
     INSTALL_COMMAND cmake --install .
 
 )
@@ -195,6 +196,12 @@ if(${SKBUILD} EQUAL 2)
                 libmmgs.so.5.8.0
             )
         endif()
+        add_custom_command(
+            TARGET muscat
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+                    /usr/local/lib/)
     elseif(APPLE)
         set(lib_path lib)
         set(extra_libs_to_copy
@@ -249,39 +256,37 @@ if(${SKBUILD} EQUAL 2)
                         ${SKBUILD_PLATLIB_DIR}/Muscat/MeshTools/RemeshBackEnds/
                 COMMAND ${CMAKE_COMMAND} -E copy
                         ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
-                        ${SKBUILD_SCRIPTS_DIR}/)
+                        ${SKBUILD_SCRIPTS_DIR}/
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+                        ${SKBUILD_PLATLIB_DIR}/Muscat/)
         endforeach()
 
     endif()
     #TODO need to clean all this part
 
 
-    foreach(lib ${extra_libs_to_copy})
-        install(FILES ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} DESTINATION ${CMAKE_INSTALL_PREFIX_internal}/lib)
+    #foreach(lib ${extra_libs_to_copy})
+        #install(FILES ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} DESTINATION ${CMAKE_INSTALL_PREFIX_internal}/lib)
 
 
-        add_custom_command(
-            TARGET muscat
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
-                    ${SKBUILD_DATA_DIR}/)
+        #add_custom_command(
+        #    TARGET muscat
+        #    POST_BUILD
+        #    COMMAND ${CMAKE_COMMAND} -E copy
+        #            ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+        #            ${SKBUILD_DATA_DIR}/)
 
-        add_custom_command(
-            TARGET muscat
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
-                    ${SKBUILD_PROJECT_NAME}/lib)
+        #add_custom_command(
+        #    TARGET muscat
+        #    POST_BUILD
+        #    COMMAND ${CMAKE_COMMAND} -E copy
+        #            ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+        ##            ${SKBUILD_PROJECT_NAME}/lib)
 
-        add_custom_command(
-            TARGET muscat
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
-                    /usr/local/lib/)
 
-    endforeach()
+
+    #endforeach()
 
     # we need to copy the mmg executables to the scripts folder
     # as they are needed by the python interface to mmg
