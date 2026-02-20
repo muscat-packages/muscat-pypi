@@ -196,12 +196,14 @@ if(${SKBUILD} EQUAL 2)
                 libmmgs.so.5.8.0
             )
         endif()
-        add_custom_command(
-            TARGET muscat
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                    ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
-                    /usr/local/lib/)
+        foreach(lib ${extra_libs_to_copy})
+            add_custom_command(
+                TARGET muscat
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
+                        /usr/local/lib/)
+        endforeach()
     elseif(APPLE)
         set(lib_path lib)
         set(extra_libs_to_copy
