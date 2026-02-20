@@ -24,6 +24,8 @@ permissions:
 
 jobs:
   build:
+    # Only run if 'after' is NOT the zero-hash (which signifies a deletion)
+    if: github.event.client_payload.after != '0000000000000000000000000000000000000000'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

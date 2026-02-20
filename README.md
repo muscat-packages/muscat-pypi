@@ -14,10 +14,24 @@ Launching a workflow
 
 This repository includes a GitHub Actions workflow to build binary wheels on Linux, macOS and Windows and publish them to PyPI when a tag is pushed to the Muscat repository.
 
+Manually in GitHub:
+-------------------
+
+On the page https://github.com/muscat-packages/muscat-pypi/actions/workflows/publish-pypi-matrix.yml use the 'Run workflow' to select the Muscat tag/branch to use for the package generation.
+
+By creating a tag in gitlab.com/drti/Muscat
+-------------------------------------------
+
+On the page https://gitlab.com/drti/muscat/-/tags use the 'New Tag' button to crate a new tag.
+
+
+Curl expression:
+----------------
+
 The action can be launched using the following curl expression:
 
 ```
-curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/muscat-packages/muscat-pypi/dispatches -d '{"event_type": "tag_push", "client_payload": {"ref": "refs/heads/MuscatPyPi", "run_name":"from curl hook"}}' -v
+curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/muscat-packages/muscat-pypi/dispatches -d '{"event_type": "tag_push", "client_payload": {"ref": "refs/tags/__tagname__", "run-name":"from curl hook"}}' -v
 ```
 
 The user must provide the gitlab token (environment variable `GITHUB_TOKEN`). the field `ref` can point to a tag or a branch of Muscat.
@@ -46,7 +60,8 @@ Create a Gitlab Webhook to notified github of the event push tag
  - Custom webhook template :
   ```{
   "event_type": "{{object_kind}}",
-  "client_payload": {"run_name":"from curl hook"}}
+  "client_payload": {"run-name":"from gitlab hook", "ref":"{{ref}}"}
+}
   ```
   - Custom Headers :
     - "Accept": "application/vnd.github+json"
