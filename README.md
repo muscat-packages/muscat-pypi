@@ -60,7 +60,7 @@ Create a Gitlab Webhook to notified github of the event push tag
  - Custom webhook template :
   ```{
   "event_type": "{{object_kind}}",
-  "client_payload": {"run-name":"from gitlab hook", "ref":"{{ref}}"}
+  "client_payload": {"run-name":"from gitlab (drti/muscat/) hook", "ref":"{{ref}}", "after":"{{after}}"}
 }
   ```
   - Custom Headers :
