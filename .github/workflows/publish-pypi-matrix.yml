@@ -109,7 +109,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     #upload only if is really a tag and not a manual execution
-    if: (startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' )) && github.event.inputs.PyPiDeploy != false
+    if: (startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' ) && github.event.inputs.PyPiDeploy != false
     steps:
       - uses: actions/checkout@v4
 
