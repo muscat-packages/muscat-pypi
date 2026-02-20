@@ -50,6 +50,7 @@ all = [
 ]
 
 [tool.cibuildwheel]
+archs = ["auto64"]
 test-requires = ["h5py","pyvista","meshio","plotly","cosapp"]
 test-command = "python -m Muscat.Helpers.Check"
 
@@ -116,5 +117,6 @@ ninja.make-fallback = true
 build.targets = ["muscat"]
 
 [tool.scikit-build.cmake.define]
-MuscatTagBranch = "master" # this values will be changed by the github action
+#TODO
+MuscatTagBranch = "MuscatPyPi" #DONT commit changes to this line, this values will be changed by the github action
 
