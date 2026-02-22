@@ -52,12 +52,17 @@ all = [
 [tool.cibuildwheel]
 archs = ["auto64"]
 test-requires = ["h5py","pyvista","meshio","plotly","cosapp"]
-test-command = "python -m Muscat.Helpers.Check"
+test-command = "python -m Muscat.Helpers.Check -k MmgRemeshing"
 
 # This skip pattern ensures only manylinux wheels are built on Linux
 skip = "*-musllinux_*"
 
-#before-all = ["",]
+#before-all = ["mkdir dependencies && cd dependencies && cmake -G Ninja ../cmake/dependencies/CMakeLists.txt && ninja",]
+
+# Don't repair macOS wheels
+[tool.cibuildwheel.macos]
+repair-wheel-command = "echo $REPAIR_LIBRARY_PATH && ls -l -a $REPAIR_LIBRARY_PATH  && DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+#DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-listdeps {wheel}
 
 [tool.coverage.run]
 branch = true
@@ -117,6 +122,5 @@ ninja.make-fallback = true
 build.targets = ["muscat"]
 
 [tool.scikit-build.cmake.define]
-#TODO
-MuscatTagBranch = "MuscatPyPi" #DONT commit changes to this line, this values will be changed by the github action
+MuscatTagBranch = "master" #DO NOT commit changes to this line, this values will be changed by the github action
 

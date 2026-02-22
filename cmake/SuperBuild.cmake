@@ -80,13 +80,17 @@ else()
 endif()
 
 #--------------------------- Kokkos ---------------------------
-set(Kokkos_ROOT ${CMAKE_BINARY_DIR}/install-temp/)
-find_package(OpenMP MODULE COMPONENTS CXX)
-find_package(Kokkos CONFIG)
-if(Kokkos_FOUND)
-    message(STATUS "Muscat SuperBuild: Kokkos found no need to download it")
-else()
+#set(Kokkos_ROOT ${CMAKE_BINARY_DIR}/install-temp/)
+
+#find_package(OpenMP MODULE COMPONENTS CXX)
+
+#find_package(Kokkos CONFIG)
+#if(Kokkos_FOUND)
+#    message(STATUS "Muscat SuperBuild: Kokkos found no need to download it")
+#else()
     IF (WIN32)
+        set(Kokkos_Host_Parallel Kokkos_ENABLE_THREADS)
+    ELSEIF(APPLE )
         set(Kokkos_Host_Parallel Kokkos_ENABLE_THREADS)
     ELSE()
         set(Kokkos_Host_Parallel Kokkos_ENABLE_OPENMP)
@@ -109,7 +113,7 @@ else()
 
     )
     add_dependencies(muscat Kokkos)
-endif()
+#endif()
 
 #--------------------------- Eigen --------------------------------------------
 # we use only boost headers no need to add the binary files to the package
@@ -159,13 +163,58 @@ if(Muscat_ENABLE_Mmg)
 endif()
 #-------------------------------------------------------------------
 
-# if in a skbuild context need some hacking to produce a functional package
+macro(INSTALL_FILE FILE DEST )
+    install(FILES ${FILE} DESTINATION ${DEST})
+endmacro()
 
-if(${SKBUILD} EQUAL 2)
+macro(INSTALL_FILES files)
+    foreach(file ${files})
+        INSTALL_FILE(file)
+    endforeach()
+endmacro()
+
 
     # we need to copy the kokkos and mmg shared libraries to the data folder
     # as they are needed by the cython modules
-    if(UNIX)
+    if(APPLE)
+        set(lib_path lib)
+        set(extra_libs_to_copy
+            libkokkosalgorithms.4.7.dylib
+            libkokkossimd.4.7.dylib
+            libkokkoscontainers.4.7.dylib
+            libkokkoscore.4.7.dylib
+            libkokkosalgorithms.4.7.0.dylib
+            libkokkossimd.4.7.0.dylib
+            libkokkoscontainers.4.7.0.dylib
+            libkokkoscore.4.7.0.dylib
+            )
+        foreach(lib ${extra_libs_to_copy})
+            INSTALL_FILE(${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} ${SKBUILD_PLATLIB_DIR}/Muscat/)
+            INSTALL_FILE(${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} /tmp/vendor/lib/)
+        endforeach()
+
+        if(Muscat_ENABLE_Mmg)
+            list(APPEND extra_libs_to_copy
+            libmmg.5.dylib
+            libmmg2d.5.dylib
+            libmmg3d.5.dylib
+            libmmgs.5.dylib
+            libmmg.5.8.0.dylib
+            libmmg2d.5.8.0.dylib
+            libmmg3d.5.8.0.dylib
+            libmmgs.5.8.0.dylib
+            )
+        endif()
+        foreach(lib ${extra_libs_to_copy})
+            INSTALL_FILE(${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} ${SKBUILD_PLATLIB_DIR}/Muscat/)
+            INSTALL_FILE(${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} /tmp/vendor/lib/)
+            INSTALL_FILE(${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib} ${SKBUILD_SCRIPTS_DIR}/)
+        endforeach()
+
+        INSTALL_FILE(${SKBUILD_PLATLIB_DIR}/Muscat/libMuscatNative.dylib /tmp/vendor/lib/)
+        INSTALL_FILE(${SKBUILD_PLATLIB_DIR}/Muscat/libMuscatKokkosNative.dylib /tmp/vendor/lib/)
+
+    elseif(UNIX)
         set(lib_path lib)
         set(extra_libs_to_copy
             libkokkosalgorithms.so
@@ -204,20 +253,7 @@ if(${SKBUILD} EQUAL 2)
                         ${CMAKE_BINARY_DIR}/install-temp/${lib_path}/${lib}
                         /usr/local/lib/)
         endforeach()
-    elseif(APPLE)
-        set(lib_path lib)
-        set(extra_libs_to_copy
-            libkokkosalgorithms.4.7.dylib
-            libkokkossimd.4.7.dylib
-            libkokkoscontainers.4.7.dylib
-            libkokkoscore.4.7.dylib)
-        if(Muscat_ENABLE_Mmg)
-            list(APPEND extra_libs_to_copy
-            libmmg.5.dylib
-            libmmg2d.5.dylib
-            libmmg3d.5.dylib
-            libmmgs.5.dylib)
-        endif()
+
     elseif(WIN32)
         set(lib_path bin)
 
@@ -315,6 +351,5 @@ if(${SKBUILD} EQUAL 2)
                         ${SKBUILD_SCRIPTS_DIR}/)
         endforeach()
     endif()
-endif()
 
 
