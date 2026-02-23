@@ -57,7 +57,7 @@ test-command = "python -m Muscat.Helpers.Check -k MmgRemeshing"
 # This skip pattern ensures only manylinux wheels are built on Linux
 skip = "*-musllinux_*"
 
-#before-all = ["mkdir dependencies && cd dependencies && cmake -G Ninja ../cmake/dependencies/CMakeLists.txt && ninja",]
+before-all = ["mkdir dependencies && cd dependencies && cmake -G Ninja ../cmake/dependencies/CMakeLists.txt && ninja",]
 
 # Don't repair macOS wheels
 [tool.cibuildwheel.macos]
