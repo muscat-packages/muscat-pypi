@@ -18,14 +18,12 @@ if(DEFINED MuscatTagBranch AND NOT "${MuscatTagBranch}" STREQUAL "" )
 else()
   set(MuscatTagBranchVersion "master")
 endif()
+
 message(STATUS "MuscatTagBranch is defined to: ${MuscatTagBranch}")
 message(STATUS "MuscatTagBranchVersion is defined to: ${MuscatTagBranchVersion}")
 
-#TODO
-#set(Muscat_URL "https://gitlab.com/drti/muscat/-/archive/${MuscatTagBranchVersion}/muscat-${MuscatTagBranchVersion}.tar.gz")
-set(Muscat_URL  "https://gitlab.com/felipebordeu/muscat/-/archive/${MuscatTagBranchVersion}/muscat-${MuscatTagBranchVersion}.tar.gz")
+set(Muscat_URL  "https://gitlab.com/drti/muscat/-/archive/${MuscatTagBranchVersion}/muscat-${MuscatTagBranchVersion}.tar.gz")
 message(STATUS "using Muscat_URL ${Muscat_URL}")
-
 
 set(boost_URL "https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-b2-nodocs.tar.gz" )
 #set(boost_URL_HASH "SHA256=aa25e7b9c227c21abb8a681efd4fe6e54823815ffc12394c9339de998eb503fb" )

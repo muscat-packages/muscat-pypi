@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.28)
 cmake_policy(SET CMP0177 OLD)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
-#set(CMAKE_INSTALL_PREFIX /usr/local/)
 
 project (MUSCAT_DEPENDENCIES
 VERSION 1.0
@@ -36,6 +35,7 @@ add_custom_target(
   ALL # Optional: make it part of the default build
 )
 
+######################## boost ##########################
 IF (WIN32)
     set(BOOST_bootstrap bootstrap.bat)
     set(BOOST_B2 b2)
@@ -43,6 +43,7 @@ ELSE()
     set(BOOST_bootstrap ./bootstrap.sh)
     set(BOOST_B2 ./b2)
 ENDIF()
+
 ExternalProject_Add(
     boost
     URL  ${boost_URL}
@@ -60,6 +61,8 @@ ExternalProject_Add(
 )
 add_dependencies(needed_libs boost)
 
+
+######################## Kokkos ##########################
 IF (WIN32)
     set(Kokkos_Host_Parallel Kokkos_ENABLE_THREADS)
 ELSEIF(APPLE )
@@ -87,6 +90,7 @@ ExternalProject_Add(
 )
 add_dependencies(needed_libs Kokkos)
 
+######################## Eigen3 ##########################
 
 ExternalProject_Add(
     Eigen3
@@ -100,6 +104,7 @@ ExternalProject_Add(
 )
 add_dependencies(needed_libs Eigen3)
 
+######################## mmg ##########################
 ExternalProject_Add(
     mmg
     URL ${mmg_URL}

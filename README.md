@@ -7,17 +7,19 @@ What the workflow does
 ====================
 
 - `build-linux`, `build-macos`, `build-windows` build wheels using `cibuildwheel` on each OS and upload per-job artifacts.
-- `publish` downloads artifacts and uploads them to PyPI using `twine` and the `PYPI_API_TOKEN` secret.
+- `publish` downloads artifacts and uploads them to PyPI using `twine` and the `TEST_PYPI_API_TOKEN` for test.pypi.org or `PYPI_API_TOKEN` for pypi.org secret.
 
 Launching a workflow
 ====================
 
-This repository includes a GitHub Actions workflow to build binary wheels on Linux, macOS and Windows and publish them to PyPI when a tag is pushed to the Muscat repository.
+This repository includes a GitHub Actions workflow to build binary wheels on Linux, macOS and Windows when a tag is pushed to the Muscat repository.
+To upload the package to pypi a manual workflow must be executed (github -> Action -> Build and Publish to PyPI -> "Run workflow")
 
 Manually in GitHub:
 -------------------
 
-On the page https://github.com/muscat-packages/muscat-pypi/actions/workflows/publish-pypi-matrix.yml use the 'Run workflow' to select the Muscat tag/branch to use for the package generation.
+On the page https://github.com/muscat-packages/muscat-pypi/actions/workflows/publish-pypi-matrix.yml use the 'Run workflow' and fill the form.
+
 
 By creating a tag in gitlab.com/drti/Muscat
 -------------------------------------------
@@ -52,7 +54,8 @@ Create a secret named `PYPI_API_TOKEN` in the repository settings (Settings → 
 
 On Muscat Repository ("https://gitlab.com/drti/muscat")
 -------------------------------------------------------
-Create a Gitlab Webhook to notified github of the event push tag
+
+Create a Gitlab Webhook to notified github of the `event push tag`
 
  - Name : Github PyPi package creation
  - URL : https://api.github.com/repos/muscat-packages/muscat-pypi/dispatches
@@ -61,7 +64,7 @@ Create a Gitlab Webhook to notified github of the event push tag
   ```{
   "event_type": "{{object_kind}}",
   "client_payload": {"run-name":"from gitlab (drti/muscat/) hook", "ref":"{{ref}}", "after":"{{after}}"}
-}
+  }
   ```
   - Custom Headers :
     - "Accept": "application/vnd.github+json"
@@ -74,3 +77,19 @@ Notes
 -----
 
 - For CI troubleshooting, run the workflow via `Actions` → select the workflow → `Run workflow` or inspect logs on failed runs.
+
+
+For publishing
+--------------
+
+On Pipy.org:
+
+Go to `Your account` -> `Account settings` -> `API tokens` -> `Add API token`
+
+On Github:
+
+Got to `Setting`  -> `Secrets and variables` -> `Actions` -> `Repository secrets` -> `New repository secret`  and add the token
+
+Variable name :
+- TEST_PYPI_API_TOKEN : for the token from test.pypi.org
+- PYPI_API_TOKEN : for the token from pypi.org

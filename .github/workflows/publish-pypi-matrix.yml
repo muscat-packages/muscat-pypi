@@ -7,16 +7,19 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Muscat Tag/Branch name to use for building'
+        description: 'Muscat Tag/Branch name to use for building (to be able to publish the tag must be in the form of x.y.z)'
         required: false
         type: string
-        #TODO change MuscatPyPi to master or 2.5
-        default: 'MuscatPyPi'
-      PyPiDeploy:
-        description: 'Deploy to PyPi'
-        required: false
-        type: boolean
-        default: false
+        default: 'master'
+      PyPiDeployTarget:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - 'No'
+          - 'test.pypi.org'
+          - 'pypi.org'
+        default: 'None'
       run-name:
         description: 'Name to display in the workflow list'
         required: false
@@ -35,13 +38,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #os : ["ubuntu-latest","windows-latest","macos-latest" ]
-        os : ["ubuntu-latest" ]
+        os : ["ubuntu-latest","windows-latest","macos-latest" ]
 
     steps:
       - uses: actions/checkout@v5
 
-      # this comes form the webhook payload
+
       - name: Set TAG_NAME environment variable
         run: |
           # Priority: workflow_dispatch input > client_payload.ref > GITHUB_REF
@@ -58,19 +60,21 @@ jobs:
             echo "No tag found; aborting"
             exit 1
           fi
+          echo "TAG_NAME=$TAG_NAME"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         shell: bash
 
-      - name: Ensure PACKAGE_VERSION is PEP 440 compliant
+      - name: Ensure PACKAGE_VERSION is PEP 440 compliant. So we can build the package.
         run: |
           # If TAG_NAME is not PEP 440 compliant, prepend '0.1.0+'
           # PEP 440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
           # This is a simple check: must start with a digit and contain only allowed chars
           PACKAGE_VERSION="$TAG_NAME"
-          if ! [[ "$PACKAGE_VERSION" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9\.\+\-_]*)$ ]]; then
+          if ! [[ "$PACKAGE_VERSION" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9\.\+_-]*)$ ]]; then
             PACKAGE_VERSION="0.1.0+$TAG_NAME"
             echo "TAG_NAME was not PEP 440 compliant, changed to $PACKAGE_VERSION"
           fi
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION"
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
         shell: bash
 
@@ -92,17 +96,14 @@ jobs:
           replacement-text: 'MuscatTagBranch = "${{ env.TAG_NAME }}"' # The text to replace it with
 
       - name: Build wheels
+      # build the  wheels for all the python versions (os is handled by the strategy.matrix.os )
         uses: pypa/cibuildwheel@v3.3.1
         env:
-          CIBW_BUILD : "cp310-* cp311-* cp312-* cp313-* cp314-*" # "* cp314t-*"
+          CIBW_BUILD : "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_ENVIRONMENT: 'REPAIR_LIBRARY_PATH=/tmp/vendor/lib'
-          #CIBW_ENVIRONMENT: 'MuscatTagBranch="${{ env.TAG_NAME }}" REPAIR_LIBRARY_PATH=/tmp/vendor/lib'
-          #CIBW_ENVIRONMENT_PASS_LINUX: 'MuscatTagBranch="${{ env.TAG_NAME }}"'
 
         with:
-        #   package-dir: .
           output-dir: wheelhouse
-        #   config-file: "{package}/pyproject.toml"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -114,7 +115,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     #upload only if is really a tag and not a manual execution
-    if: (startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' ) && github.event.inputs.PyPiDeploy != false
+    if: ((startsWith(github.event.client_payload.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' ) && github.event.inputs.PyPiDeployTarget != 'No')
     steps:
       - uses: actions/checkout@v4
 
@@ -144,8 +145,14 @@ jobs:
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        #TODO remove the --repository testpypi to publish to the official pypi page
+          TEST_PYPI_TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          PYPI_TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           ls -la artifacts || true
-          python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" --non-interactive --verbose
+          if [ "${{ github.event.inputs.PyPiDeployTarget }}" == "test.pypi.org" ]; then
+            echo "Deploy to testpypi "
+            python -m twine upload --repository testpypi artifacts/* -u "$TWINE_USERNAME" -p "$TEST_PYPI_TWINE_PASSWORD" --non-interactive --verbose
+          elif [ "${{ github.event.inputs.PyPiDeployTarget }}" == "pypi.org" ]; then
+            python -m twine upload artifacts/* -u "$TWINE_USERNAME" -p "$PYPI_TWINE_PASSWORD" --non-interactive --verbose
+          fi
+        shell: bash
