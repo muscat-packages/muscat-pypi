@@ -37,7 +37,9 @@ add_custom_target(
 
 ######################## boost ##########################
 IF (WIN32)
-    set(BOOST_bootstrap bootstrap.bat)
+    # Boost 1.89 does not yet recognize Visual Studio 18 auto-detection and
+    # reports it as "vcunk". Use the supported VS 2022/MSVC toolset explicitly.
+    set(BOOST_bootstrap bootstrap.bat vc143)
     set(BOOST_B2 b2)
 ELSE()
     set(BOOST_bootstrap ./bootstrap.sh)

@@ -43,11 +43,15 @@ ExternalProject_Add(
 # we use only boost headers no need to add the binary files to the package
 # so we install it in a local folder in the binary dir
 IF (WIN32)
-    set(BOOST_bootstrap bootstrap.bat)
+    # Boost 1.89 does not yet recognize Visual Studio 18 auto-detection and
+    # reports it as "vcunk". Use the supported VS 2022/MSVC toolset explicitly.
+    set(BOOST_bootstrap bootstrap.bat vc143)
     set(BOOST_B2 b2)
+    set(BOOST_ARCHITECTURE_OPTIONS architecture=x86 address-model=64)
 ELSE()
     set(BOOST_bootstrap ./bootstrap.sh)
     set(BOOST_B2 ./b2)
+    set(BOOST_ARCHITECTURE_OPTIONS "")
 ENDIF()
 ExternalProject_Add(
     boost
@@ -61,7 +65,7 @@ ExternalProject_Add(
         --without-exception --without-iostreams --without-random --without-regex --without-serialization
         --without-stacktrace --without-system --without-timer --without-type_erasure --without-wave
         --without-filesystem --without-histogram threading=multi link=shared runtime-link=shared variant=release
-        cxxstd=17 install --prefix=${CMAKE_BINARY_DIR}/install-temp/
+        ${BOOST_ARCHITECTURE_OPTIONS} cxxstd=17 install --prefix=${CMAKE_BINARY_DIR}/install-temp/
     INSTALL_COMMAND ""
 )
 add_dependencies(muscat boost)
