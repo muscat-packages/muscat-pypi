@@ -45,27 +45,28 @@ ExternalProject_Add(
 IF (WIN32)
     # Boost 1.89 does not yet recognize Visual Studio 18 auto-detection and
     # reports it as "vcunk". Use the supported VS 2022/MSVC toolset explicitly.
-    set(BOOST_bootstrap bootstrap.bat vc143)
+    set(BOOST_CONFIGURE_COMMAND cmd /c bootstrap.bat vc143)
     set(BOOST_B2 b2)
-    set(BOOST_ARCHITECTURE_OPTIONS architecture=x86 address-model=64)
+    set(BOOST_BUILD_OPTIONS toolset=msvc-14.3 architecture=x86 address-model=64)
 ELSE()
-    set(BOOST_bootstrap ./bootstrap.sh)
+    set(BOOST_CONFIGURE_COMMAND ./bootstrap.sh)
     set(BOOST_B2 ./b2)
-    set(BOOST_ARCHITECTURE_OPTIONS "")
+    set(BOOST_BUILD_OPTIONS "")
 ENDIF()
 ExternalProject_Add(
     boost
     URL  ${boost_URL}
     #URL_HASH  ${boost_URL_HASH}
     BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND ${BOOST_bootstrap}
+    CONFIGURE_COMMAND ${BOOST_CONFIGURE_COMMAND}
     BUILD_COMMAND ${BOOST_B2} headers --without-graph_parallel --without-yap
         --without-graph --without-mpi --without-python --without-test --without-log
         --without-math --without-atomic --without-coroutine --without-context --without-date_time
         --without-exception --without-iostreams --without-random --without-regex --without-serialization
         --without-stacktrace --without-system --without-timer --without-type_erasure --without-wave
+        --without-container --without-program_options
         --without-filesystem --without-histogram threading=multi link=shared runtime-link=shared variant=release
-        ${BOOST_ARCHITECTURE_OPTIONS} cxxstd=17 install --prefix=${CMAKE_BINARY_DIR}/install-temp/
+        ${BOOST_BUILD_OPTIONS} cxxstd=17 install --prefix=${CMAKE_BINARY_DIR}/install-temp/
     INSTALL_COMMAND ""
 )
 add_dependencies(muscat boost)

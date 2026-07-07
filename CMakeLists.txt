@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 
-cmake_policy(SET CMP0177 OLD)
+if(POLICY CMP0177)
+  cmake_policy(SET CMP0177 OLD)
+endif()
 
 project (SUPERBUILD
 VERSION 1.0
